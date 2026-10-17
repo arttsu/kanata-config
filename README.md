@@ -1,0 +1,1 @@
+# My Kanata Config

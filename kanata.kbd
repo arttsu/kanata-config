@@ -1,0 +1,230 @@
+(defcfg
+  process-unmapped-keys yes
+  concurrent-tap-hold yes
+
+  macos-dev-names-include (
+    "Apple Internal Keyboard / Trackpad"
+  )
+)
+
+
+(defvar
+  tap-time   200
+  hold-time  200
+  chord-time 45
+)
+
+
+(defsrc
+  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+
+  caps a    s    d    f    g    h    j    k    l    ;    '    ret
+
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft
+
+  lctl lalt lmet spc  rmet ralt
+
+  lft  down up   rght
+)
+
+
+(defalias
+  ha    (tap-hold-release $tap-time $hold-time a lmet)
+  hs    (tap-hold-release $tap-time $hold-time s lsft)
+  hd    (tap-hold-release $tap-time $hold-time d lalt)
+  hf    (tap-hold-release $tap-time $hold-time f lctl)
+
+  hj    (tap-hold-release $tap-time $hold-time j rctl)
+  hk    (tap-hold-release $tap-time $hold-time k lalt)
+  hl    (tap-hold-release $tap-time $hold-time l rsft)
+  hsemi (tap-hold-release $tap-time $hold-time ; rmet)
+)
+
+
+(defalias
+  tnum (tap-hold-press $tap-time $hold-time
+         spc
+         (layer-while-held num))
+
+  tsym (tap-hold-press $tap-time $hold-time
+         spc
+         (layer-while-held sym))
+
+  ;; Used when the opposite thumb layer is already active.
+  tsys (tap-hold-press $tap-time $hold-time
+         spc
+         (layer-while-held sys))
+
+  emedia (tap-hold-press $tap-time $hold-time
+           esc
+           (layer-while-held media))
+
+  plainmode (layer-switch plain)
+  tobase    (layer-switch base)
+
+  cw (caps-word 5000)
+)
+
+
+(defalias
+  cu (chord top-nav u)
+  ci (chord top-nav i)
+  co (chord top-nav o)
+  cp (chord top-nav p)
+
+  cm      (chord bottom-nav m)
+  ccomma  (chord bottom-nav ,)
+  cdot    (chord bottom-nav .)
+  cslash  (chord bottom-nav /)
+
+  cc (chord cv-combo c)
+  cv (chord cv-combo v)
+)
+
+
+(defchords top-nav $chord-time
+  (u)     u
+  (i)     i
+  (o)     o
+  (p)     p
+
+  (u i)   up
+  (i o)   pgup
+  (o p)   home
+)
+
+
+(defchords bottom-nav $chord-time
+  (m)     m
+  (,)     ,
+  (.)     .
+  (/)     /
+
+  (m ,)   down
+  (, .)   pgdn
+  (. /)   end
+)
+
+
+(defchords cv-combo $chord-time
+  (c)     c
+  (v)     v
+
+  (c v)   f19
+)
+
+
+;; ============================================================
+;; BASE
+;; ============================================================
+
+(deflayer base
+  grv     1    2    3     4     5    6    7    8       9     0       -    =    bspc
+
+  tab     q    w    e     r     t    y    @cu  @ci     @co   @cp     bspc ]    \
+
+  @emedia @ha  @hs  @hd   @hf   g    h    @hj  @hk     @hl   @hsemi  '    ret
+
+  lsft    z    x    @cc   @cv   b    n    @cm  @ccomma @cdot @cslash ret
+
+  lctl    lalt lmet @tnum @tsym ralt
+
+  lft     down up   rght
+)
+
+
+;; ============================================================
+;; NUM
+;; ============================================================
+
+(deflayer num
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
+
+  f13  f1   f2   f3   f4   f16  S-8  7    8    9    /    _    XX   XX
+
+  f14  f5   f6   f7   f8   f17  -    4    5    6    0    ,    XX
+
+  f15  f9   f10  f11  f12  f18  S-=  1    2    3    .    _
+
+  XX   XX   _    _    @tsys XX
+
+  XX   XX   XX   @cw
+)
+
+
+;; ============================================================
+;; SYM
+;; ============================================================
+
+(deflayer sym
+  XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX
+
+  S-grv S-1   S-2   S-3   S-4   S-5   S-6   S-7   S-8   [     ]     _     XX    XX
+
+  XX    S-=   =     S--   -     XX    XX    S-9   S-0   S-[   S-]   XX    XX
+
+  XX    S-,   S-.   S-\   \     XX    XX    grv   ,     .     /     _
+
+  XX    XX    _    @tsys  _     XX
+
+  XX    XX    XX    XX
+)
+
+
+;; ============================================================
+;; MEDIA
+;; ============================================================
+
+(deflayer media
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
+
+  XX   XX   XX   XX   XX   XX   XX   prev next pp   XX   XX   XX   XX
+
+  XX   XX   XX   XX   XX   XX   lft  down up   rght XX   XX   XX
+
+  XX   XX   XX   XX   XX   XX   XX   vold volu mute XX   XX
+
+  XX   XX   XX   XX   XX   XX
+
+  XX   XX   XX   XX
+)
+
+
+;; ============================================================
+;; SYS
+;; ============================================================
+
+(deflayer sys
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
+
+  lrld XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
+
+  @plainmode XX XX XX XX XX XX XX XX XX XX XX XX
+
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
+
+  XX   XX   _    XX   _    XX
+
+  XX   XX   XX   XX
+)
+
+
+;; ============================================================
+;; PLAIN
+;; ============================================================
+
+(deflayer plain
+  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+
+  @tobase a  s    d    f    g    h    j    k    l    ;    '    ret
+
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft
+
+  lctl lalt lmet spc rmet ralt
+
+  lft  down up   rght
+)
