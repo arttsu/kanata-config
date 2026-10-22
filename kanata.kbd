@@ -9,9 +9,9 @@
 
 
 (defvar
-  tap-time   200
-  hold-time  200
-  chord-time 45
+  tap-time    200
+  hold-time   200
+  shift-time  200
 )
 
 
@@ -30,6 +30,10 @@
 )
 
 
+;; ============================================================
+;; HOME-ROW MODS
+;; ============================================================
+
 (defalias
   ha    (tap-hold-release $tap-time $hold-time a lmet)
   hs    (tap-hold-release $tap-time $hold-time s lsft)
@@ -42,6 +46,10 @@
   hsemi (tap-hold-release $tap-time $hold-time ; rmet)
 )
 
+
+;; ============================================================
+;; LAYERS AND CAPS WORD
+;; ============================================================
 
 (defalias
   tnum (tap-hold-press $tap-time $hold-time
@@ -57,77 +65,56 @@
          spc
          (layer-while-held sys))
 
-  emedia (tap-hold-press $tap-time $hold-time
-           esc
-           (layer-while-held media))
+  enav (tap-hold-press $tap-time $hold-time
+         esc
+         (layer-while-held nav))
 
-  plainmode (layer-switch plain)
-  tobase    (layer-switch base)
+  media (layer-while-held media)
 
-  cw (caps-word 5000)
-)
+  cw (caps-word-custom 5000
+       (a b c d e f g h i j k l m
+        n o p q r s t u v w x y z)
 
+       ;; Keys allowed without capitalization or ending Caps Word.
+       (0 1 2 3 4 5 6 7 8 9 - bspc del lsft rsft))
 
-(defalias
-  cu (chord top-nav u)
-  ci (chord top-nav i)
-  co (chord top-nav o)
-  cp (chord top-nav p)
-
-  cm      (chord bottom-nav m)
-  ccomma  (chord bottom-nav ,)
-  cdot    (chord bottom-nav .)
-  cslash  (chord bottom-nav /)
-
-  cc (chord cv-combo c)
-  cv (chord cv-combo v)
-)
+  ;; Eager execution makes the first press act as Shift immediately.
+  ;; The second press also acts as Shift and activates Caps Word.
+  ;; Only the dedicated left Shift on BASE uses this alias.
+   cshift (tap-dance-eager $shift-time
+         (
+           lsft
+           @cw
+         ))
 
 
-(defchords top-nav $chord-time
-  (u)     u
-  (i)     i
-  (o)     o
-  (p)     p
+  ;; Expire Caps Word when entering plain mode.
+  ;; Unlike QMK's caps_word_off(), this uses a short timeout.
+  plainmode (multi
+              (caps-word 1)
+              (layer-switch plain))
 
-  (u i)   up
-  (i o)   pgup
-  (o p)   home
-)
-
-
-(defchords bottom-nav $chord-time
-  (m)     m
-  (,)     ,
-  (.)     .
-  (/)     /
-
-  (m ,)   down
-  (, .)   pgdn
-  (. /)   end
-)
-
-
-(defchords cv-combo $chord-time
-  (c)     c
-  (v)     v
-
-  (c v)   f19
+  tobase (layer-switch base)
 )
 
 
 ;; ============================================================
 ;; BASE
+;;
+;; Physical Caps Lock: tap Escape, hold NAV.
+;; Physical grave: hold MEDIA.
+;; Dedicated left Shift: double-tap for Caps Word.
+;; No chords.
 ;; ============================================================
 
 (deflayer base
-  grv     1    2    3     4     5    6    7    8       9     0       -    =    bspc
+  @media  1    2    3     4     5    6    7    8    9    0       -    =    bspc
 
-  tab     q    w    e     r     t    y    @cu  @ci     @co   @cp     bspc ]    \
+  tab     q    w    e     r     t    y    u    i    o    p       bspc ]    \
 
-  @emedia @ha  @hs  @hd   @hf   g    h    @hj  @hk     @hl   @hsemi  '    ret
+  @enav   @ha  @hs  @hd   @hf   g    h    @hj  @hk  @hl  @hsemi  '    ret
 
-  lsft    z    x    @cc   @cv   b    n    @cm  @ccomma @cdot @cslash ret
+  @cshift z    x    c     v     b    n    m    ,    .    /       ret
 
   lctl    lalt lmet @tnum @tsym ralt
 
@@ -150,7 +137,7 @@
 
   XX   XX   _    _    @tsys XX
 
-  XX   XX   XX   @cw
+  XX   XX   XX   XX
 )
 
 
@@ -167,22 +154,50 @@
 
   XX    S-,   S-.   S-\   \     XX    XX    grv   ,     .     /     _
 
-  XX    XX    _    @tsys  _     XX
+  XX    XX    _     @tsys _     XX
 
   XX    XX    XX    XX
 )
 
 
 ;; ============================================================
+;; NAV
+;;
+;; H/J/K/L -> Left/Down/Up/Right
+;; N/M/,/. -> Home/Page Down/Page Up/End
+;;
+;; Dedicated modifiers remain available.
+;; Left Shift here is ordinary Shift, not the Caps Word alias.
+;; ============================================================
+
+(deflayer nav
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
+
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
+
+  _    XX   XX   XX   XX   XX   lft  down up   rght XX   XX   XX
+
+  lsft XX   XX   XX   XX   XX   home pgdn pgup end  XX   XX
+
+  lctl lalt lmet XX   XX   ralt
+
+  XX   XX   XX   XX
+)
+
+
+;; ============================================================
 ;; MEDIA
+;;
+;; Playback and volume only.
+;; Held using the physical grave key.
 ;; ============================================================
 
 (deflayer media
-  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
+  _    XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
 
   XX   XX   XX   XX   XX   XX   XX   prev next pp   XX   XX   XX   XX
 
-  XX   XX   XX   XX   XX   XX   lft  down up   rght XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
 
   XX   XX   XX   XX   XX   XX   XX   vold volu mute XX   XX
 
@@ -194,6 +209,9 @@
 
 ;; ============================================================
 ;; SYS
+;;
+;; Hold both thumb layer keys.
+;; Tab reloads the config; Caps Lock enters plain mode.
 ;; ============================================================
 
 (deflayer sys
@@ -213,6 +231,9 @@
 
 ;; ============================================================
 ;; PLAIN
+;;
+;; No home-row mods, layer-taps, chords, or Caps Word activation.
+;; Caps Lock returns to BASE.
 ;; ============================================================
 
 (deflayer plain
@@ -220,11 +241,11 @@
 
   tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
 
-  @tobase a  s    d    f    g    h    j    k    l    ;    '    ret
+  @tobase a s   d    f    g    h    j    k    l    ;    '    ret
 
   lsft z    x    c    v    b    n    m    ,    .    /    rsft
 
-  lctl lalt lmet spc rmet ralt
+  lctl lalt lmet spc  rmet ralt
 
   lft  down up   rght
 )
