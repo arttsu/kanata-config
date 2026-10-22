@@ -9,20 +9,29 @@
 
 
 (defvar
-  tap-time    200
-  hold-time   200
-  shift-time  200
+  tap-time   200
+  hold-time  200
+  shift-time 200
 )
 
 
+;; ============================================================
+;; PHYSICAL KEYS
+;;
+;; 102d = extra ISO key between left Shift and Z.
+;; Fn is omitted because it is not exposed to Kanata.
+;; ============================================================
+
 (defsrc
+  esc  f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12
+
   grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
 
   tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
 
   caps a    s    d    f    g    h    j    k    l    ;    '    ret
 
-  lsft z    x    c    v    b    n    m    ,    .    /    rsft
+  lsft 102d z    x    c    v    b    n    m    ,    .    /    rsft
 
   lctl lalt lmet spc  rmet ralt
 
@@ -48,7 +57,7 @@
 
 
 ;; ============================================================
-;; LAYERS AND CAPS WORD
+;; LAYER ACTIONS
 ;; ============================================================
 
 (defalias
@@ -71,25 +80,7 @@
 
   media (layer-while-held media)
 
-  cw (caps-word-custom 5000
-       (a b c d e f g h i j k l m
-        n o p q r s t u v w x y z)
-
-       ;; Keys allowed without capitalization or ending Caps Word.
-       (0 1 2 3 4 5 6 7 8 9 - bspc del lsft rsft))
-
-  ;; Eager execution makes the first press act as Shift immediately.
-  ;; The second press also acts as Shift and activates Caps Word.
-  ;; Only the dedicated left Shift on BASE uses this alias.
-   cshift (tap-dance-eager $shift-time
-         (
-           lsft
-           @cw
-         ))
-
-
-  ;; Expire Caps Word when entering plain mode.
-  ;; Unlike QMK's caps_word_off(), this uses a short timeout.
+  ;; Short timeout clears Caps Word on entering Plain.
   plainmode (multi
               (caps-word 1)
               (layer-switch plain))
@@ -99,22 +90,51 @@
 
 
 ;; ============================================================
+;; CAPS WORD
+;;
+;; Capitalize letters.
+;; Digits, minus, underscore, and deletion preserve Caps Word.
+;; Minus is NOT automatically changed into underscore.
+;; ============================================================
+
+(defalias
+  cw (caps-word-custom 5000
+       (a b c d e f g h i j k l m
+        n o p q r s t u v w x y z)
+
+       (0 1 2 3 4 5 6 7 8 9 - bspc del lsft rsft))
+
+  ;; First press: ordinary Shift, immediately.
+  ;; Second press: activate Caps Word instead of holding Shift.
+  ;; Only the dedicated left Shift on Base uses this action.
+  cshift (tap-dance-eager $shift-time
+           (
+             lsft
+             @cw
+           ))
+)
+
+
+;; ============================================================
 ;; BASE
 ;;
-;; Physical Caps Lock: tap Escape, hold NAV.
-;; Physical grave: hold MEDIA.
+;; Caps Lock: tap Escape, hold NAV.
+;; Grave: hold MEDIA.
+;; Space: tap Space, hold NUM.
+;; Right Command: tap Space, hold SYM.
 ;; Dedicated left Shift: double-tap for Caps Word.
-;; No chords.
 ;; ============================================================
 
 (deflayer base
-  @media  1    2    3     4     5    6    7    8    9    0       -    =    bspc
+  XX      XX   XX   XX   XX   XX   XX   XX   XX   XX   XX      XX   XX
 
-  tab     q    w    e     r     t    y    u    i    o    p       bspc ]    \
+  @media  1    2    3    4    5    6    7    8    9    0       -    =    bspc
 
-  @enav   @ha  @hs  @hd   @hf   g    h    @hj  @hk  @hl  @hsemi  '    ret
+  tab     q    w    e    r    t    y    u    i    o    p       bspc ]    \
 
-  @cshift z    x    c     v     b    n    m    ,    .    /       ret
+  @enav   @ha  @hs  @hd  @hf  g    h    @hj  @hk  @hl  @hsemi  '    ret
+
+  @cshift XX   z    x    c    v    b    n    m    ,    .       /    ret
 
   lctl    lalt lmet @tnum @tsym ralt
 
@@ -127,15 +147,17 @@
 ;; ============================================================
 
 (deflayer num
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
+
   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
 
-  f13  f1   f2   f3   f4   f16  S-8  7    8    9    /    _    XX   XX
+  f13  f1   f2   f3   f4   f16  S-8  7    8    9    /    XX   XX   XX
 
   f14  f5   f6   f7   f8   f17  -    4    5    6    0    ,    XX
 
-  f15  f9   f10  f11  f12  f18  S-=  1    2    3    .    _
+  f15  XX   f9   f10  f11  f12  f18  S-=  1    2    3    .    XX
 
-  XX   XX   _    _    @tsys XX
+  XX   XX   XX   _    @tsys XX
 
   XX   XX   XX   XX
 )
@@ -146,15 +168,17 @@
 ;; ============================================================
 
 (deflayer sym
+  XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX
+
   XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX
 
-  S-grv S-1   S-2   S-3   S-4   S-5   S-6   S-7   S-8   [     ]     _     XX    XX
+  S-grv S-1   S-2   S-3   S-4   S-5   S-6   S-7   S-8   [     ]     XX    XX    XX
 
   XX    S-=   =     S--   -     XX    XX    S-9   S-0   S-[   S-]   XX    XX
 
-  XX    S-,   S-.   S-\   \     XX    XX    grv   ,     .     /     _
+  XX    XX    S-,   S-.   S-\   \     XX    XX    grv   ,     .     /     XX
 
-  XX    XX    _     @tsys _     XX
+  XX    XX    XX    @tsys _     XX
 
   XX    XX    XX    XX
 )
@@ -167,17 +191,19 @@
 ;; N/M/,/. -> Home/Page Down/Page Up/End
 ;;
 ;; Dedicated modifiers remain available.
-;; Left Shift here is ordinary Shift, not the Caps Word alias.
+;; Left Shift is ordinary Shift here.
 ;; ============================================================
 
 (deflayer nav
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
+
   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
 
   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
 
   _    XX   XX   XX   XX   XX   lft  down up   rght XX   XX   XX
 
-  lsft XX   XX   XX   XX   XX   home pgdn pgup end  XX   XX
+  lsft XX   XX   XX   XX   XX   XX   home pgdn pgup end  XX   XX
 
   lctl lalt lmet XX   XX   ralt
 
@@ -188,18 +214,21 @@
 ;; ============================================================
 ;; MEDIA
 ;;
-;; Playback and volume only.
-;; Held using the physical grave key.
+;; Q/W   -> Brightness down/up
+;; U/I/O -> Previous/Next/Play-pause
+;; M/,/. -> Volume down/up/Mute
 ;; ============================================================
 
 (deflayer media
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
+
   _    XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
 
-  XX   XX   XX   XX   XX   XX   XX   prev next pp   XX   XX   XX   XX
+  XX   brdn brup XX   XX   XX   XX   prev next pp   XX   XX   XX   XX
 
   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
 
-  XX   XX   XX   XX   XX   XX   XX   vold volu mute XX   XX
+  XX   XX   XX   XX   XX   XX   XX   XX   vold volu mute XX   XX
 
   XX   XX   XX   XX   XX   XX
 
@@ -211,41 +240,49 @@
 ;; SYS
 ;;
 ;; Hold both thumb layer keys.
-;; Tab reloads the config; Caps Lock enters plain mode.
+;; Grave enters Plain.
+;; Tab reloads the configuration.
 ;; ============================================================
 
 (deflayer sys
-  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
+  XX         XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
 
-  lrld XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
+  @plainmode XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
 
-  @plainmode XX XX XX XX XX XX XX XX XX XX XX XX
+  lrld       XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
 
-  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
+  XX         XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
 
-  XX   XX   _    XX   _    XX
+  XX         XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
 
-  XX   XX   XX   XX
+  XX         XX   XX   _    _    XX
+
+  XX         XX   XX   XX
 )
 
 
 ;; ============================================================
 ;; PLAIN
 ;;
+;; Normal physical-key mappings, except:
+;; Grave returns to Base.
+;;
 ;; No home-row mods, layer-taps, chords, or Caps Word activation.
-;; Caps Lock returns to BASE.
+;; The extra ISO key passes through unchanged.
 ;; ============================================================
 
 (deflayer plain
-  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+  esc     f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12
 
-  tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+  @tobase 1    2    3    4    5    6    7    8    9    0    -    =    bspc
 
-  @tobase a s   d    f    g    h    j    k    l    ;    '    ret
+  tab     q    w    e    r    t    y    u    i    o    p    [    ]    \
 
-  lsft z    x    c    v    b    n    m    ,    .    /    rsft
+  caps    a    s    d    f    g    h    j    k    l    ;    '    ret
 
-  lctl lalt lmet spc  rmet ralt
+  lsft    102d z    x    c    v    b    n    m    ,    .    /    rsft
 
-  lft  down up   rght
+  lctl    lalt lmet spc  rmet ralt
+
+  lft     down up   rght
 )
